@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: compiladores-1
+    command: bash
+    volumes:
+      - .:/app
+    tty: true
