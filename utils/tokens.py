@@ -1,4 +1,16 @@
-# Definição dos tokens
+LITERALS = {
+	"RPAREN": ")",
+	"LPAREN": "(",
+	"STRING": "string",
+	"INT": "int",
+	"EQ": "=",
+	"ADD": "+",
+	"SUB": "-",
+	"MUL": "*",
+	"GT": ">",
+	"LT": "<"
+}
+
 TOKENS = {
 	"RPAREN": r"\)",
 	"LPAREN": r"\(",
@@ -10,8 +22,6 @@ TOKENS = {
 	"ADD": r"\+",
 	"SUB": r"-",
 	"MUL": r"\*",
-	"DIV": r"/",
-	"MOD": r"%",
 	"VAR": r"[A-Za-z_][A-Za-z0-9_]*",
 	"GT": r">",
 	"LT": r"<",
