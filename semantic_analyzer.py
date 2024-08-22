@@ -1,190 +1,212 @@
 import re
 
-from utils.tokens import TOKENS, LITERALS
+from utils.tokens import TOKENS
 from lookup_table.node import Node
 from lookup_table.lookup_table import LookupTable
 
 class SemanticAnalyzer:
-	def __init__(self):
-		self.lookup_table = LookupTable()
-		self.errors = []
+  def __init__(self):
+    self.lookup_table = LookupTable()
+    self.errors = []
 
-	def match_token(self, pattern, token):
-		return re.match(TOKENS[pattern], token) is not None
+  def get_alphabet(self):
+    # Retorna uma expressão regular combinada de todos os tokens relevantes que compõem o alfabeto.
+    return (
+      rf'{TOKENS["VAR"]}|{TOKENS["NUM"]}|{TOKENS["CONST"]}|{TOKENS["ADD"]}|'
+      rf'{TOKENS["SUB"]}|{TOKENS["MUL"]}|{TOKENS["GT"]}|{TOKENS["LT"]}|'
+      rf'{TOKENS["LPAREN"]}|{TOKENS["RPAREN"]}'
+    )
 
-	def tokenize_expression(self, expression):
-		pattern = (
-			rf'{TOKENS["VAR"]}|{TOKENS["NUM"]}|{TOKENS["CONST"]}|{TOKENS["ADD"]}|'
-			rf'{TOKENS["SUB"]}|{TOKENS["MUL"]}|{TOKENS["GT"]}|{TOKENS["LT"]}'
-			rf'{TOKENS["LPAREN"]}|{TOKENS["RPAREN"]}'
-		)
+  def match_token(self, pattern, token):
+    # Verifica se o token corresponde ao padrão especificado.
+    return re.match(TOKENS[pattern], token) is not None
 
-		return re.findall(pattern, expression)
+  def tokenize_expression(self, expression):
+    # Converte a expressão em tokens válidos e identifica tokens inválidos.
+    pattern = self.get_alphabet()
+    valid_tokens = re.findall(pattern, expression)
 
-	def check_parentheses(self, tokens):
-		stack = []
+    # Combina todos os tokens válidos e inválidos.
+    combined_pattern = rf'{pattern}|[^\s]'
+    all_tokens = re.findall(combined_pattern, expression)
 
-		for token in tokens:
-			if token == '(':
-				stack.append('(')
+    # Identifica tokens inválidos que não correspondem ao padrão.
+    invalid_tokens = [token for token in all_tokens if token not in valid_tokens]
 
-			if token == ')' and (not stack or stack.pop() != '('):
-				return False
+    return valid_tokens, invalid_tokens
 
-		return len(stack) == 0
+  def check_parentheses(self, tokens):
+    # Verifica se os parênteses na lista de tokens estão balanceados.
+    stack = []
 
-	def evaluate_expression(self, expression):
-		tokens = self.tokenize_expression(expression)
+    for token in tokens:
+      if token == '(':
+        stack.append('(')
 
-		if not self.check_parentheses(tokens):
-			self.errors.append("Parênteses não balanceados.")
-			return None
+      if token == ')' and (not stack or stack.pop() != '('):
+        return False
 
-		postfix = self.expression_to_postfix(tokens)
+    return len(stack) == 0
 
-		if postfix is None:
-			self.errors.append("Expressão inválida.")
-			return None
+  def evaluate_expression(self, expression):
+    # Avalia a expressão fornecida, convertendo-a em postfixed e verificando a validade.
+    tokens, invalid_tokens = self.tokenize_expression(expression)
 
-		result_type = self.evaluate_postfix(postfix)
-		return result_type
+    # Verifica se há tokens inválidos.
+    if invalid_tokens:
+      self.errors.append(f"Token inválido: {invalid_tokens[0]}")
+      return None
 
-	def expression_to_postfix(self, tokens):
-		precedence = {'>': 0, '<': 0, '+': 1, '-': 1, '*': 2}
-		output = []
-		operators = []
+    # Verifica se os parênteses estão balanceados.
+    if not self.check_parentheses(tokens):
+      self.errors.append("Parênteses não balanceados.")
+      return None
 
-		for token in tokens:
-			if self.match_token("NUM", token) or self.match_token("CONST", token) or self.match_token("VAR", token):
-				output.append(token)
-			elif token in precedence:
-				while (operators and operators[-1] in precedence and
-								precedence[token] <= precedence[operators[-1]]):
-					output.append(operators.pop())
-				operators.append(token)
-			elif token == '(':
-				operators.append(token)
-			elif token == ')':
-				while operators and operators[-1] != '(':
-					output.append(operators.pop())
-				operators.pop()
+    # Converte a expressão para a forma postfixed.
+    postfix = self.expression_to_postfix(tokens)
 
-		while operators:
-			output.append(operators.pop())
+    if postfix is None:
+      self.errors.append("Expressão inválida.")
+      return None
 
-		print(output)
+    result_type = self.evaluate_postfix(postfix)
+    return result_type
 
-		return output
+  def expression_to_postfix(self, tokens):
+    # Converte a expressão em postfixed utilizando a precedência dos operadores e dos parêntesis.
+    precedence = {'>': 0, '<': 0, '+': 1, '-': 1, '*': 2}
+    output = []
+    operators = []
 
-	def evaluate_postfix(self, tokens):
-		stack = []
-		for token in tokens:
-			if self.match_token("NUM", token):
-				stack.append("int")
-				continue
+    for token in tokens:
+      if self.match_token("NUM", token) or self.match_token("CONST", token) or self.match_token("VAR", token):
+        output.append(token)
+      elif token in precedence:
+        while (operators and operators[-1] in precedence and
+               precedence[token] <= precedence[operators[-1]]):
+          output.append(operators.pop())
+        operators.append(token)
+      elif token == '(':
+        operators.append(token)
+      elif token == ')':
+        while operators and operators[-1] != '(':
+          output.append(operators.pop())
+        operators.pop()
 
-			if self.match_token("CONST", token):
-				stack.append("string")
-				continue
+    while operators:
+      output.append(operators.pop())
 
-			if self.match_token("VAR", token):
-				var_node = self.lookup_table.get_variable(token)
-				if var_node:
-					stack.append(var_node.var_type)
-				else:
-					self.errors.append(f"Variável '{token}' não declarada.")
-					return None
-				continue
+    return output
 
-			if token in {'+', '-', '*', '>', '<'}:
-				if len(stack) < 2:
-					self.errors.append(f"Expressão inválida.")
-					return None
+  def evaluate_postfix(self, tokens):
+    # Avalia a expressão postfixed e verifica a compatibilidade de tipos.
+    stack = []
+    for token in tokens:
+      if self.match_token("NUM", token):
+        stack.append("int")
+        continue
 
-				type2 = stack.pop()
-				type1 = stack.pop()
+      if self.match_token("CONST", token):
+        stack.append("string")
+        continue
 
-				if type1 != type2:
-					self.errors.append(f"Operação entre tipos incompatíveis '{type1}' e '{type2}'.")
-					return None
+      if self.match_token("VAR", token):
+        var_node = self.lookup_table.get_variable(token)
+        if var_node:
+          stack.append(var_node.var_type)
+        else:
+          self.errors.append(f"Variável '{token}' não declarada.")
+          return None
+        continue
 
-				if type1 != 'int' or type2 != 'int':
-					self.errors.append(f"Operador '{token}' deve ser usado com inteiros.")
-					return None
-				stack.append('int')
-				continue
+      if token in {'+', '-', '*', '>', '<'}:
+        if len(stack) < 2:
+          self.errors.append(f"Expressão inválida.")
+          return None
 
-			self.errors.append(f"Token inválido '{token}'.")
-			return None
+        type2 = stack.pop()
+        type1 = stack.pop()
 
-		return stack[0] if stack else None
+        if type1 != type2:
+          self.errors.append(f"Operação entre tipos incompatíveis '{type1}' e '{type2}'.")
+          return None
 
-	def parse_and_analyze(self, source_code):
-		lines = source_code.split(';')
+        if type1 != 'int' or type2 != 'int':
+          self.errors.append(f"Operador '{token}' deve ser usado com inteiros.")
+          return None
+        stack.append('int')
+        continue
 
-		# Avalia todas as linhas separadas por ; do bloco
-		for line in lines:
-			line = line.strip()
-			if not line:
-				continue
+      self.errors.append(f"Token inválido '{token}'.")
+      return None
 
-			# Verifica se a linha é uma declaração de variável
-			if match := re.match(
-				rf'({TOKENS["INT"]}|{TOKENS["STRING"]})\s+({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)', 
-				line
-			):
-				var_type, var_name, expression = match.groups()
-				expression = expression.strip()
+    return stack[0] if stack else None
 
-				# Verifica se a variável foi declarada
-				if self.lookup_table.get_variable(var_name):
-					self.errors.append(f"Erro: Variável '{var_name}' já declarada.")
-					return
+  def analyze(self, code):
+    # Analisa e avalia cada linha do bloco separada por ponto e vírgula.
+    lines = code.split(';')
 
-				# Verifica se a expressão é compatível com o tipo
-				result_type = self.evaluate_expression(expression)
-				if result_type is None:
-					return
+    for line in lines:
+      line = line.strip()
+      if not line:
+        continue
 
-				if result_type != var_type:
-					self.errors.append(f"Atribuição inválida para '{var_name}': esperado {var_type}, encontrado {result_type}.")
-					return
+      # Verifica se a linha é uma declaração de variável.
+      if match := re.match(
+        rf'({TOKENS["INT"]}|{TOKENS["STRING"]})\s+({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)',
+        line
+      ):
+        var_type, var_name, expression = match.groups()
+        expression = expression.strip()
 
-				var_node = Node(var_name, var_type, expression)
-				self.lookup_table.add_variable(var_name, var_node)
-				continue
+        # Verifica se a variável já foi declarada.
+        if self.lookup_table.get_variable(var_name):
+          self.errors.append(f"Variável '{var_name}' já declarada.")
+          return
 
-			# Verifica se a linha é uma atribuição de variável
-			if match := re.match(
-				rf'({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)', 
-				line
-			):
-				var_name, expression = match.groups()
-				expression = expression.strip()
+        # Verifica se a expressão é compatível com o tipo da variável.
+        result_type = self.evaluate_expression(expression)
+        if result_type is None:
+          return
 
-				var_node = self.lookup_table.get_variable(var_name)
+        if result_type != var_type:
+          self.errors.append(f"Atribuição inválida para '{var_name}': esperado {var_type}, encontrado {result_type}.")
+          return
 
-				# Verifica se a variável foi declarada
-				if not var_node:
-					self.errors.append(f"Variável '{var_name}' não declarada.")
-					return
+        var_node = Node(var_name, var_type, expression)
+        self.lookup_table.add_variable(var_name, var_node)
+        continue
 
-				var_type = self.lookup_table.get_variable(var_name).var_type
+      # Verifica se a linha é uma atribuição a uma variável existente.
+      if match := re.match(
+        rf'({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)', 
+        line
+      ):
+        var_name, expression = match.groups()
+        expression = expression.strip()
 
-				result_type = self.evaluate_expression(expression)
-				if result_type is None:
-					return
+        var_node = self.lookup_table.get_variable(var_name)
 
-				if result_type != var_type:
-					self.errors.append(f"Atribuição inválida: esperado {var_type}, encontrado {result_type}.")
-					return
+        # Verifica se a variável foi declarada anteriormente.
+        if not var_node:
+          self.errors.append(f"Variável '{var_name}' não declarada.")
+          return
 
-				# Atualiza o nó existente na LookupTable
-				var_node.update(var_type, expression)
+        var_type = self.lookup_table.get_variable(var_name).var_type
 
-				continue
+        result_type = self.evaluate_expression(expression)
+        if result_type is None:
+          return
 
-			self.errors.append(f"Declaração inválida: {line}")
+        if result_type != var_type:
+          self.errors.append(f"Atribuição inválida: esperado {var_type}, encontrado {result_type}.")
+          return
 
-	def response(self):
-		return len(self.errors) == 0, self.errors
+        # Atualiza o nó existente na LookupTable com a nova expressão.
+        var_node.update(var_type, expression)
+        continue
+
+      self.errors.append(f"Declaração inválida: {line}")
+
+  def response(self):
+    return len(self.errors) == 0, self.errors
