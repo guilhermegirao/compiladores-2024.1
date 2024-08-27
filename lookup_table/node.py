@@ -1,3 +1,4 @@
+# Node para a lookup table
 class Node:
 	def __init__(self, name, var_type=None, value=None):
 		self.name = name

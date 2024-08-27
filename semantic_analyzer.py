@@ -18,7 +18,7 @@ class SemanticAnalyzer:
     )
 
   def match_token(self, pattern, token):
-    # Verifica se o token corresponde ao padrão especificado.
+    # Verifica se o token corresponde ao regex.
     return re.match(TOKENS[pattern], token) is not None
 
   def tokenize_expression(self, expression):
@@ -49,7 +49,7 @@ class SemanticAnalyzer:
     return len(stack) == 0
 
   def evaluate_expression(self, expression):
-    # Avalia a expressão fornecida, convertendo-a em postfixed e verificando a validade.
+    # Avalia a expressão fornecida e retorna os tokens válidos e inválidos.
     tokens, invalid_tokens = self.tokenize_expression(expression)
 
     # Verifica se há tokens inválidos.
@@ -62,7 +62,7 @@ class SemanticAnalyzer:
       self.errors.append("Parênteses não balanceados.")
       return None
 
-    # Converte a expressão para a forma postfixed.
+    # Converte a expressão para o formato postfix.
     postfix = self.expression_to_postfix(tokens)
 
     if postfix is None:
@@ -73,7 +73,11 @@ class SemanticAnalyzer:
     return result_type
 
   def expression_to_postfix(self, tokens):
-    # Converte a expressão em postfixed utilizando a precedência dos operadores e dos parêntesis.
+    # Converte a expressão em postfix para uma avaliação mais fácil,
+    # utilizando a precedência dos operadores e dos parêntesis.
+    # Dessa maneira, conseguimos facilitar a verificação
+    # na compatibilidade de tipos nas operações.
+
     precedence = {'>': 0, '<': 0, '+': 1, '-': 1, '*': 2}
     output = []
     operators = []
@@ -99,17 +103,20 @@ class SemanticAnalyzer:
     return output
 
   def evaluate_postfix(self, tokens):
-    # Avalia a expressão postfixed e verifica a compatibilidade de tipos.
+    # Avalia a expressão e verifica a compatibilidade de tipos.
     stack = []
     for token in tokens:
+      # Verifica se o token é um número
       if self.match_token("NUM", token):
         stack.append("int")
         continue
 
+      # Verifica se o token é uma string
       if self.match_token("CONST", token):
         stack.append("string")
         continue
 
+      # Verifica se o token é uma variável
       if self.match_token("VAR", token):
         var_node = self.lookup_table.get_variable(token)
         if var_node:
@@ -119,6 +126,7 @@ class SemanticAnalyzer:
           return None
         continue
 
+      # Verifica se o token é um operador
       if token in {'+', '-', '*', '>', '<'}:
         if len(stack) < 2:
           self.errors.append(f"Expressão inválida.")
@@ -209,4 +217,5 @@ class SemanticAnalyzer:
       self.errors.append(f"Declaração inválida: {line}")
 
   def response(self):
+    # Retorna se houveram erros ou não, caso sim, retorna também os erros encontrados.
     return len(self.errors) == 0, self.errors

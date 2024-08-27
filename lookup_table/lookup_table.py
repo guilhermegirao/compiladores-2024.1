@@ -1,3 +1,4 @@
+# Tabela de lookup para checar a declaração de variáveis
 class LookupTable:
 	def __init__(self):
 		self.table = {}

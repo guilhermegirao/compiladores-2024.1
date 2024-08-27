@@ -1,16 +1,4 @@
-LITERALS = {
-	"RPAREN": ")",
-	"LPAREN": "(",
-	"STRING": "string",
-	"INT": "int",
-	"EQ": "=",
-	"ADD": "+",
-	"SUB": "-",
-	"MUL": "*",
-	"GT": ">",
-	"LT": "<"
-}
-
+# Dicionário de tokens para a linguagem A
 TOKENS = {
 	"RPAREN": r"\)",
 	"LPAREN": r"\(",

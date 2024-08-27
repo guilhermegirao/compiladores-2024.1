@@ -1,26 +1,25 @@
 from semantic_analyzer import SemanticAnalyzer
 
-def evaluateResponse(success):
-  return "Sucesso" if success else "Falha"
+def evaluateResponse(success, errors):
+  print("Sucesso" if success else "Falha")
+  if errors:
+    print(f"Erro: {"\n".join(errors)}")
 
 """
 TODO:
-- criar casos de uso
-- criar doc de como rodar
-- organizar o código
-- criar erros genericos tipo i18n (opcional)
-- substituir valores fixos pelos literals (opcional)
+- corrigir caso de inicialização sem =, ex.: int a;
+- avaliar se pode concatenar duas strings ou string com int
 """
 
 if __name__ == "__main__":
-  source_code = """
-  int a = 1 + 2;
-  string a = 1;
-  """
+  code_block = ""
+
+  with open("__tests__/input.txt", "r") as file:
+    code_block = file.read()
 
   analyzer = SemanticAnalyzer()
-  analyzer.analyze(source_code)
+  analyzer.analyze(code_block)
+
   success, errors = analyzer.response()
 
-  print(evaluateResponse(success))
-  print(f"Erro: {"\n".join(errors)}")
+  evaluateResponse(success, errors)
