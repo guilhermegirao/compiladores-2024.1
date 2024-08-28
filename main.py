@@ -8,7 +8,6 @@ def evaluateResponse(success, errors):
 """
 TODO:
 - corrigir caso de inicialização sem =, ex.: int a;
-- avaliar se pode concatenar duas strings ou string com int
 """
 
 if __name__ == "__main__":
