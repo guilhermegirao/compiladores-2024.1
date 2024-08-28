@@ -5,11 +5,6 @@ def evaluateResponse(success, errors):
   if errors:
     print(f"Erro: {"\n".join(errors)}")
 
-"""
-TODO:
-- corrigir caso de inicialização sem =, ex.: int a;
-"""
-
 if __name__ == "__main__":
   code_block = ""
 

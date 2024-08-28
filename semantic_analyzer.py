@@ -160,6 +160,7 @@ class SemanticAnalyzer:
         continue
 
       # Verifica se a linha é uma declaração de variável.
+      # Exemplo: int|string var_name = expression;
       if match := re.match(
         rf'({TOKENS["INT"]}|{TOKENS["STRING"]})\s+({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)',
         line
@@ -186,6 +187,7 @@ class SemanticAnalyzer:
         continue
 
       # Verifica se a linha é uma atribuição a uma variável existente.
+      # Exemplo: var_name = expression;
       if match := re.match(
         rf'({TOKENS["VAR"]})\s*{TOKENS["EQ"]}\s*(.+)', 
         line
@@ -212,6 +214,23 @@ class SemanticAnalyzer:
 
         # Atualiza o nó existente na LookupTable com a nova expressão.
         var_node.update(var_type, expression)
+        continue
+
+      # Verifica se a linha é uma inicialização de variável.
+      # Exemplo: int|string var_name;
+      if match := re.match(
+        rf'({TOKENS["INT"]}|{TOKENS["STRING"]})\s+({TOKENS["VAR"]})',
+        line
+      ):
+        var_type, var_name = match.groups()
+
+        # Verifica se a variável já foi declarada.
+        if self.lookup_table.get_variable(var_name):
+          self.errors.append(f"Variável '{var_name}' já declarada.")
+          return
+
+        var_node = Node(var_name, var_type)
+        self.lookup_table.add_variable(var_name, var_node)
         continue
 
       self.errors.append(f"Declaração inválida: {line}")
