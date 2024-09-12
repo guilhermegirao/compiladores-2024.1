@@ -6,12 +6,12 @@ class Tree():
   TKN_PATTERN = r'(MOVE|MEM|\+|\-|\*|\/)' #Padrão de "tokens"
   NTKN_PATTERN = r'\(|\)|\,' #Padrão de "não tokens" (TEMP, CONST e outros valores como FP etc...)
 
-  def __init__(self): 
+  def __init__(self):
     self.root = None #Raiz da arvore
     self.scopes = [] #Lista de tuplas que representa os escopos
 
   def makeTree(self, str):
-    txt = str.split() #Divide o input em espaços em branco
+    txt = re.findall(r'\w+|[^\s\w]', str) # Transforma a entraaa em um array de palavras e tokens
     tokens = re.findall(self.TKN_PATTERN, str) #Encontra os "tokens" (+, -, *, /, MEM, MOVE)
     currentDirection = "L" #Inicia construção da arvore pela esquerda
     previous = None #Marca o node anterior
