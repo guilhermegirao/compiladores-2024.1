@@ -1,7 +1,7 @@
 import re
 from instruction_selector.node import Node
 
-class Selector():
+class Selector:
   TKN_PATTERN = r'(MOVE|MEM|\+|\-|\*|\/)'
 
   #TABELA DE INSTRUÇÕES ARQUITETURA DE JOUETTE

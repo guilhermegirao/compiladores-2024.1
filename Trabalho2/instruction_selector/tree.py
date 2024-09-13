@@ -2,16 +2,16 @@ import re
 from instruction_selector.node import Node
 from graphviz import Digraph
 
-class Tree():
+class Tree:
   TKN_PATTERN = r'(MOVE|MEM|\+|\-|\*|\/)' #Padrão de "tokens"
-  NTKN_PATTERN = r'\(|\)|\,' #Padrão de "não tokens" (TEMP, CONST e outros valores como FP etc...)
+  NTKN_PATTERN = r'\(|\)|\,' #Padrão de "não-tokens" (TEMP, CONST e outros valores como FP etc...)
 
   def __init__(self):
     self.root = None #Raiz da arvore
     self.scopes = [] #Lista de tuplas que representa os escopos
 
   def makeTree(self, str):
-    txt = re.findall(r'\w+|[^\s\w]', str) # Transforma a entraaa em um array de palavras e tokens
+    txt = re.findall(r'\w+|[^\s\w]', str) # Transforma a entrada em um array de palavras e tokens
     tokens = re.findall(self.TKN_PATTERN, str) #Encontra os "tokens" (+, -, *, /, MEM, MOVE)
     currentDirection = "L" #Inicia construção da arvore pela esquerda
     previous = None #Marca o node anterior
@@ -20,7 +20,7 @@ class Tree():
     rawValue = None #Valor bruto (para casos de TEMP x ou CONST x)
     for i in range(len(txt)): #ITERANDO SOBRE A ENTRADA
       if (i < len(txt)):
-        if(not re.match(self.NTKN_PATTERN, txt[i])): #Se for um não token
+        if(not re.match(self.NTKN_PATTERN, txt[i])): #Se for um não-token
           if (txt[i] == "CONST" or txt[i] == "TEMP"):
             #Essa parte junta valores como TEMP x ou CONST x
             if (not re.match(self.NTKN_PATTERN, txt[i+1])):
