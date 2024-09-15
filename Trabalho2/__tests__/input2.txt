@@ -1,0 +1,1 @@
+MOVE(*(CONST 5, MEM(CONST 100)))
