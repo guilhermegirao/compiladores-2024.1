@@ -1,33 +1,23 @@
-import os
-# from instruction_selector.selector import Selector
-from instruction_selector.tree import Tree
+from flow_analysis.liveness_analyzer import LivenessAnalyzer
+from flow_analysis.reaching_definitions_analyzer import ReachingDefinitionsAnalyzer
+from flow_analysis.available_expressions_analyzer import AvailableExpressionsAnalyzer
 
-def format_file_name(file):
-  return file.replace('.txt', '')
-
-input_path = "./__tests__"
+INPUT_FILE = "./__tests__/input3.txt"
 
 if __name__ == "__main__":
-  # Para testes com todos os inputs dentro da pasta /__tests__
-  for file in os.listdir(input_path):
-    if file.endswith(".txt"):
-      with open(f"{input_path}/{file}", encoding='utf8') as f:
-        instructions = f.read()
+  print()
 
-      print(f"* TESTE {format_file_name(file)}:")
+  print("=== Questão 1 - Liveness Analysis:  ===")
+  la = LivenessAnalyzer(INPUT_FILE)
+  la.analyze()
+  la.print_results()
 
-      t = Tree()
-      t.makeTree(instructions) #Cria arvore
+  print("=== Questão 2 - Reaching Definitions: ===")
+  rd = ReachingDefinitionsAnalyzer(INPUT_FILE)
+  rd.analyze()
+  rd.print_results()
 
-      tree_name = format_file_name(f'__outputs__/tree_graph/{file}')
-      t.generateTreeImage(tree_name)
-      os.remove(tree_name) # Remove o arquivo dot gerado pelo graphviz
-
-      print(f"=== ARVORE GRAFICAMENTE SALVA EM: {tree_name}.png")
-      print('\n')
-
-      print("=== PADRÕES SELECIONADOS:")
-
-      print("=== INSTRUÇÕES SELECIONADAS:")
-
-      print('\n')
+  print("=== Questão 3 - Available Expressions: ===")
+  ae = AvailableExpressionsAnalyzer(INPUT_FILE)
+  ae.analyze()
+  ae.print_results()

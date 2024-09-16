@@ -1,1 +1,0 @@
-MOVE(MEM(+(MEM(+(FP, CONST a)), *(TEMP i, CONST 4))), MEM(+(FP, CONST x)))
