@@ -1,5 +1,3 @@
-import pandas as pd
-
 class AvailableExpressionsAnalyzer:
   def __init__(self, input_file):
     self.blocks = {}  # Armazena os blocos de código

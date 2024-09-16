@@ -2,7 +2,7 @@ from flow_analysis.liveness_analyzer import LivenessAnalyzer
 from flow_analysis.reaching_definitions_analyzer import ReachingDefinitionsAnalyzer
 from flow_analysis.available_expressions_analyzer import AvailableExpressionsAnalyzer
 
-INPUT_FILE = "./__tests__/input3.txt"
+INPUT_FILE = "./__tests__/input.txt"
 
 if __name__ == "__main__":
   print()
